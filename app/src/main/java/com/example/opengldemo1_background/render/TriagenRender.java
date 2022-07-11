@@ -1,4 +1,4 @@
-package com.example.opengldemo1_background;
+package com.example.opengldemo1_background.render;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -15,15 +15,22 @@ import javax.microedition.khronos.opengles.GL10;
 /*
 * 本类实现一个在屏幕画个三角形
 * */
-class TriagenRender implements GLSurfaceView.Renderer {
+public class TriagenRender implements GLSurfaceView.Renderer {
 
     FloatBuffer floatBuffer ;
     int progrem;
+    private int vPosition;
+    int colorHandle;
+    //设置颜色，依次为红绿蓝和透明通道
+    float color[] = { 1.0f, 0f, 0f, 1.0f };
+
     //三角形定点坐标
     float titagenrender  [] = {
         0.5f, 0.5f, 0f,
         -0.5f,-0.5f,0f,
-        0.5f,-0.5f,0f};
+        0.5f,-0.5f,0f
+    };
+
     //定点着色器
     private final String vertexShaderCode =
             "attribute vec4 vPosition; " +
@@ -54,14 +61,14 @@ class TriagenRender implements GLSurfaceView.Renderer {
 
         Log.i(TAG,"onSurfaceCreated 3");
         //3:创建定点着色器和片元着色器
-        int dingdian = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-        int pianyuan = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
+        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
 
         Log.i(TAG,"onSurfaceCreated 4");
         // 4:创建承载着色器的opengl 方法,并将点点着色器和片元着色器加入
         progrem = GLES20.glCreateProgram();
-        GLES20.glAttachShader(progrem,dingdian);
-        GLES20.glAttachShader(progrem,pianyuan);
+        GLES20.glAttachShader(progrem,vertexShader);
+        GLES20.glAttachShader(progrem,fragmentShader);
 
         Log.i(TAG,"onSurfaceCreated 5");
         //5：连接程序
@@ -82,10 +89,7 @@ class TriagenRender implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 gl, int width, int height) {
 
     }
-private int vPosition;
-    int colorHandle;
-    //设置颜色，依次为红绿蓝和透明通道
-    float color[] = { 1.0f, 0f, 0f, 1.0f };
+
     @Override
     public void onDrawFrame(GL10 gl) {
         Log.i(TAG,"onDrawFrame 1");
@@ -108,27 +112,5 @@ private int vPosition;
         // 4:绘制三角形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,3);
         GLES20.glDisableVertexAttribArray(vPosition);
-
-//        Log.i(TAG,"onDrawFrame 1");
-//        //将程序加入到OpenGLES2.0环境
-//        GLES20.glUseProgram(progrem);
-//
-//        //获取顶点着色器的vPosition成员句柄
-//        vPosition = GLES20.glGetAttribLocation(progrem, "vPosition");
-//        //启用三角形顶点的句柄
-//        GLES20.glEnableVertexAttribArray(mPositionHandle);
-        //准备三角形的坐标数据
-//        GLES20.glVertexAttribPointer(mPositionHandle, 3,
-//                GLES20.GL_FLOAT, false,
-//                12, vertexBuffer);
-        //获取片元着色器的vColor成员的句柄
-//        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-//        //设置绘制三角形的颜色
-//        GLES20.glUniform4fv(mColorHandle, 1, color, 0);
-//        //绘制三角形
-//        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-//        //禁止顶点数组的句柄
-//        GLES20.glDisableVertexAttribArray(mPositionHandle);
-
     }
 }

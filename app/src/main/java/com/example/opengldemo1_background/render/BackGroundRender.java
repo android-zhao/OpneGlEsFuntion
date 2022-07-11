@@ -1,4 +1,4 @@
-package com.example.opengldemo1_background;
+package com.example.opengldemo1_background.render;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;

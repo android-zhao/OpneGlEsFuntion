@@ -1,15 +1,18 @@
 package com.example.opengldemo1_background;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
+import com.example.opengldemo1_background.activity.SimpleRenderActivity;
 
-    GLSurfaceView glSurfaceView;
+
+public class MainActivity extends Activity implements View.OnClickListener {
+
+
+    Button simpleRender;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,33 +21,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void initView(){
-        glSurfaceView = findViewById(R.id.surfaceview_opengles);
-//        glSurfaceView.setElevation(2.0f);
-        //设置onengl的版本
-        glSurfaceView.setEGLContextClientVersion(2);
-
-        //设置渲染器 自实现  背景颜色改变
-//        glSurfaceView.setRenderer(new BackGroundRender());
-
-        //设置渲染器 自实现  画三角形
-        glSurfaceView.setRenderer(new TriagenRender());
-
-        //设置渲染模式
-        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        simpleRender = findViewById(R.id.simple_render);
+        simpleRender.setOnClickListener(this::onClick);
 
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        glSurfaceView.onPause();
+    public void onClick(View view) {
+        Intent intent = null;
+        switch (view.getId()){
+            case R.id.simple_render:
+                intent = new Intent(MainActivity.this, SimpleRenderActivity.class);
+                break;
+        }
+        startActivity(intent);
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        glSurfaceView.onResume();
-    }
-
-
 }
