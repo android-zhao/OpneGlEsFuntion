@@ -13,9 +13,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true">
         <activity
+            android:name=".activity.TextureActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.SimpleRenderActivity"
-            android:exported="false"
-            />
+            android:exported="false" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
