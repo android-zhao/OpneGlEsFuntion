@@ -1,2 +1,7 @@
 include ':app'
-rootProject.name = "OpenGlDemo1_background"
+rootProject.name = "OpenGlDemo"
+include ':LivePush'
+include ':LivePull'
+include ':OpenGlFilter'
+include ':AvHandler'
+include ':avadoc'

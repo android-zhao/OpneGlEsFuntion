@@ -1,31 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
-
-  <LinearLayout
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_centerInParent="true"
-      android:orientation="vertical"
-    >
-      <Button
-        android:id="@+id/simple_render"
+    <LinearLayout
+        android:id="@+id/first_ll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="绘制三角形"
-      />
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/glsurface_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="glsurface"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/camera_test"
+            android:text="camera界面"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mvptest"
+            android:text="mvp矩阵测试"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/second_ll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/first_ll"
+        >
+        <Button
+            android:id="@+id/glsurface_watermarkactivity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="水印"/>
 
-      <Button
-          android:id="@+id/opengl_texture"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="加载纹理"
-          />
-  </LinearLayout>
+<!--        <Button-->
+<!--                android:id="@+id/glsurface_animation_activity"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="opengl动画"/>-->
+        <Button
+            android:id="@+id/glsurface_fboactivity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FBO场景"/>
+
+        <Button
+            android:id="@+id/glsurface_codec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="gl编解码"/>
+        <Button
+            android:id="@+id/glsurface_codec_nativeegl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="nativeEgl"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/third_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/second_ll" >
+
+        <Button
+            android:id="@+id/glsurface_opengl_transition"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="视频动画效果"
+            />
+        <Button
+            android:id="@+id/glsurface_shader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="shadertoy效果"
+            />
+        <Button
+            android:id="@+id/glsurface_preview_video"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="预览+视频播放 画中画"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/fourth_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/third_ll">
+
+        <Button
+            android:id="@+id/glsurface_playvideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="opengl播放视频"
+            />
+    </LinearLayout>
 
 </RelativeLayout>
