@@ -1,5 +1,5 @@
 include ':app'
-rootProject.name = "OpenGlDemo"
+rootProject.name = "OpenGlEsFuntion"
 include ':LivePush'
 include ':LivePull'
 include ':OpenGlFilter'

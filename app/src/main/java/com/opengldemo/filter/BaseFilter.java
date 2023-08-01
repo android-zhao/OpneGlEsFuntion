@@ -204,6 +204,12 @@ public class    BaseFilter {
         return mOutputHeight;
     }
 
+    public FloatBuffer getmVertexBuffer() {
+        return mVertexBuffer;
+    }
 
+    public FloatBuffer getmTextureBuffer() {
+        return mTextureBuffer;
+    }
 }
 

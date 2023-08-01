@@ -34,8 +34,8 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
    private Surface mPreviewSurface = null;
    private String mVideoPath = "";
 
-   private FloatBuffer mVertexBuffer = null;
-   private FloatBuffer mTextureBuffer = null;
+//   private FloatBuffer mVertexBuffer = null;
+//   private FloatBuffer mTextureBuffer = null;
    private int previewTextureId = -1;
    private  SurfaceTexture mSurfaceTexture = null;
    private PlayVideoNormalFilter mPlayVideoNormalFilter = null;
@@ -59,11 +59,12 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
       //1：准备 opengl环境 包括顶点坐标 和创建纹理
       prepareOpenglEnv();
 
+      GLES30.glClear(GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_COLOR_BUFFER_BIT);
 
-      GLES30.glDisable(GL10.GL_DITHER);
+//      GLES30.glDisable(GL10.GL_DITHER);
       GLES30.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-      GLES30.glEnable(GL10.GL_CULL_FACE);
-      GLES30.glEnable(GL10.GL_DEPTH_TEST);
+//      GLES30.glEnable(GL10.GL_CULL_FACE);
+//      GLES30.glEnable(GL10.GL_DEPTH_TEST);
 
       //2：创建展示视频的基本filter
       mPlayVideoNormalFilter = new PlayVideoNormalFilter(mContext);
@@ -99,6 +100,10 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
       Matrix.orthoM(projectionMatrix, 0,
               - 1, 1, -1, 1,
               -1f, 1f);
+//      Matrix.orthoM(projectionMatrix, 0,
+//              0, 1, 0, 1,
+//              0f, 1f);
+      mPlayVideoNormalFilter.setProjectionMatrix(projectionMatrix);
    }
 
    private volatile boolean isUpdateTexture = false;
@@ -114,7 +119,8 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
             isUpdateTexture = false;
          }
 
-         mPlayVideoNormalFilter.onDrawFrame(previewTextureId,mVertexBuffer,mTextureBuffer);
+         mPlayVideoNormalFilter.onDrawFrame(previewTextureId,mPlayVideoNormalFilter.getmVertexBuffer(),
+                 mPlayVideoNormalFilter.getmTextureBuffer());
       }
    }
 
@@ -146,7 +152,7 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
    }
 
    private void prepareOpenglEnv(){
-      createVertexArray();
+//      createVertexArray();
       previewTextureId = createTexture();
    }
 
@@ -155,21 +161,21 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
    //创建顶点和纹理坐标
    void createVertexArray(){
       //1：创建顶点坐标和纹理坐标系
-      mVertexBuffer = ByteBuffer.allocateDirect(TextureRotateUtil.VERTEX.length * 4)
-              .order(ByteOrder.nativeOrder())
-              .asFloatBuffer();
-      mVertexBuffer.put(TextureRotateUtil.VERTEX).position(0);
-
-      mTextureBuffer = ByteBuffer.allocateDirect(TextureRotateUtil.TEXTURE_ROTATE_0.length * 4)
-              .order(ByteOrder.nativeOrder())
-              .asFloatBuffer();
-      mTextureBuffer.put(TextureRotateUtil.TEXTURE_ROTATE_0).position(0);
-      if(mVertexBuffer.hasArray() ){
-         Log.d(TAG,"createVertexArray :" + Arrays.toString(mVertexBuffer.array()) );
-      }
-      if(mTextureBuffer.hasArray()){
-         Log.d(TAG,"createVertexArray :" +Arrays.toString(mTextureBuffer.array()) );
-      }
+//      mVertexBuffer = ByteBuffer.allocateDirect(TextureRotateUtil.VERTEX.length * 4)
+//              .order(ByteOrder.nativeOrder())
+//              .asFloatBuffer();
+//      mVertexBuffer.put(TextureRotateUtil.VERTEX).position(0);
+//
+//      mTextureBuffer = ByteBuffer.allocateDirect(TextureRotateUtil.TEXTURE_ROTATE_0.length * 4)
+//              .order(ByteOrder.nativeOrder())
+//              .asFloatBuffer();
+//      mTextureBuffer.put(TextureRotateUtil.TEXTURE_ROTATE_0).position(0);
+//      if(mVertexBuffer.hasArray() ){
+//         Log.d(TAG,"createVertexArray :" + Arrays.toString(mVertexBuffer.array()) );
+//      }
+//      if(mTextureBuffer.hasArray()){
+//         Log.d(TAG,"createVertexArray :" +Arrays.toString(mTextureBuffer.array()) );
+//      }
 
    }
 

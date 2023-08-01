@@ -22,6 +22,7 @@ public abstract class AbsPlayVideoBaseFilter extends BaseFilter {
     protected void onInit() {
         super.onInit();
         textureTransformLocation = GLES30.glGetUniformLocation(getProgramId(), "textureTransform");
+        Log.i(TAG,"onInit end");
     }
 
     private float[] textureTransformMatrix = new float[16];
