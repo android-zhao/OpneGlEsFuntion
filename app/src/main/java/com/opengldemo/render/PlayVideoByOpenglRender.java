@@ -2,6 +2,7 @@ package com.opengldemo.render;
 
 import static android.opengl.GLES20.glBindTexture;
 import static android.opengl.GLES20.glGenTextures;
+import static android.opengl.GLES20.glUniformMatrix4fv;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
@@ -92,6 +93,7 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 
    private float[] sTMatrix = new float[16];
    private final float[] projectionMatrix = new float[16];
+   private final float[] textureScaleMatrix = new float[16];
    private void updateProjection() {
       float viewRatio = (float) viewWidth / viewHeight;
 
@@ -104,7 +106,10 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 //              0, 1, 0, 1,
 //              0f, 1f);
       mPlayVideoNormalFilter.setProjectionMatrix(projectionMatrix);
+//      Matrix.scaleM(textureScaleMatrix,0,0.5f,1,0);
    }
+
+
 
    private volatile boolean isUpdateTexture = false;
    @Override
@@ -116,6 +121,7 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
             mSurfaceTexture.updateTexImage();
             mSurfaceTexture.getTransformMatrix(sTMatrix);
             mPlayVideoNormalFilter.setTextureTransformMatrix(sTMatrix);
+            mPlayVideoNormalFilter.setTextureScaleMatrix(textureScaleMatrix);
             isUpdateTexture = false;
          }
 

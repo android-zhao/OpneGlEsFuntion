@@ -7,7 +7,7 @@ out vec4 outColor;
 uniform samplerExternalOES inputImageTexture;
 
 void main() {
-    vec2 uv = (textureCoordinate - 2 ) * 1.3;
+    vec2 uv = (textureCoordinate * 3.0 ) - 0.5 ;
 //      outColor = texture(inputImageTexture, textureCoordinate);
     outColor = texture(inputImageTexture, uv);
 

@@ -45,17 +45,42 @@ public class CodecRender implements GLSurfaceView.Renderer , SurfaceTexture.OnFr
     private BaseFilter mAddCameraFilter =null;
     private CodecController mCodecManager;
 
+    private volatile int opengRenderFrame = 0;
+    private volatile int cameraFrame = 0;
     public CodecRender(Context context , Handler handler,GLSurfaceView surfaceView) {
         mContext = context;
         mHandler = handler;
         mPreviewSurface = surfaceView;
         mPreviewSurface.setEGLContextClientVersion(3);
         mPreviewSurface.setRenderer(this);
-        mPreviewSurface.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mPreviewSurface.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         mCodecManager = new CodecController(context);
         mRecordStatus = RECORDER_OFF;
         createVertexArray();
+
+        mHandler.postDelayed(renderStatic,1000);
+        mHandler.postDelayed(cameraStatic,1000);
+
     }
+
+    private Runnable renderStatic = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG,"renderStatic ：" +opengRenderFrame);
+            opengRenderFrame = 0;
+            mHandler.postDelayed(renderStatic,1000);
+        }
+    };
+
+    private Runnable cameraStatic = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG,"cameraStatic ：" +cameraFrame);
+            cameraFrame = 0;
+            mHandler.postDelayed(cameraStatic,1000);
+        }
+    };
+
 
     private int cameraTextureId = -1;
     SurfaceTexture surfaceTexture = null;
@@ -98,8 +123,9 @@ public class CodecRender implements GLSurfaceView.Renderer , SurfaceTexture.OnFr
 
     @Override
     public void onDrawFrame(GL10 gl) {
+        opengRenderFrame ++;
         //启动编码
-//        Log.d(TAG,"onDrawFrame");
+        Log.d(TAG,"onDrawFrame");
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         GLES30.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -139,6 +165,7 @@ public class CodecRender implements GLSurfaceView.Renderer , SurfaceTexture.OnFr
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        cameraFrame++;
         Log.d(TAG,"onFrameAvailable ");
 //        requestRender();
         mPreviewSurface.requestRender();

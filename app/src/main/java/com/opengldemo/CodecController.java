@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.EGLContext;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
@@ -12,7 +11,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.opengldemo.codec.AVRecorderCore;
-import com.opengldemo.codec.EnCodeTask;
 import com.opengldemo.egl.EglCore;
 import com.opengldemo.egl.WindowEglSurface;
 import com.opengldemo.factory.BeautyFilterType;

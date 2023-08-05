@@ -88,7 +88,7 @@ public class FboActivity extends Activity implements FboOnePicFilter.OnDataDrawW
             @Override
             public void run() {
                 // 图片资源是 BitmapFactory.decodeStream(context.getAssets().open("lena.jpg"));
-                Bitmap bitmap=Bitmap.createBitmap(512,512, Bitmap.Config.ARGB_8888);
+                Bitmap bitmap=Bitmap.createBitmap(1920,1080, Bitmap.Config.ARGB_8888);
                 bitmap.copyPixelsFromBuffer(buffer);
                 Toast.makeText(FboActivity.this, "fbo 处理成功", Toast.LENGTH_SHORT).show();
                 mImageView.setImageBitmap(bitmap);

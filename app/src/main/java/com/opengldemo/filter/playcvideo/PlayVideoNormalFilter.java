@@ -33,6 +33,7 @@ public class PlayVideoNormalFilter extends BaseFilter {
     }
     private int textureTransformLocation;//mvp矩阵在glsl中的 Uniform 句柄值
     private int uMatrixLocation = -1;//mvp矩阵
+    private int textureScaleLocation = -1;//纹理的缩放矩阵
     @Override
     protected void onInit() {
         Log.i(TAG,"onInit");
@@ -43,16 +44,23 @@ public class PlayVideoNormalFilter extends BaseFilter {
 //        mTextureBuffer.put(TextureRotateUtil.TEXTURE_ROTATE_0).position(0);
         textureTransformLocation = GLES30.glGetUniformLocation(getProgramId(), "textureTransform");
         uMatrixLocation = GLES30.glGetUniformLocation(getProgramId(), "uMatrix");
+        textureScaleLocation = GLES30.glGetUniformLocation(getProgramId(), "textureScale");
     }
 
     private float[] textureTransformMatrix = new float[16];
     private float[] projectionMatrix = new float[16];
+    private float[] textureScaleMatrix = new float[16];
+
     public void setTextureTransformMatrix(float[] matrix) {
         textureTransformMatrix = matrix;
     }
 
     public void setProjectionMatrix(float[] projectionMatrix) {
         this.projectionMatrix = projectionMatrix;
+    }
+
+    public void setTextureScaleMatrix(float[] textureScaleMatrix) {
+        this.textureScaleMatrix = textureScaleMatrix;
     }
 
     @Override
@@ -87,6 +95,10 @@ public class PlayVideoNormalFilter extends BaseFilter {
         //设置MVP矩阵
         GLES30.glUniformMatrix4fv(uMatrixLocation,
                 1, false, projectionMatrix, 0);
+
+        //设置纹理缩放矩阵
+        GLES30.glUniformMatrix4fv(textureScaleLocation,
+                1, false, textureScaleMatrix, 0);
 
         if (textureId != GLesUtils.NO_TEXTURE) {
             GLES30.glActiveTexture(GLES30.GL_TEXTURE0);

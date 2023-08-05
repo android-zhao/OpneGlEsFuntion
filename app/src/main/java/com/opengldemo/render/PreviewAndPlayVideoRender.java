@@ -48,6 +48,7 @@ import android.util.Size;
 
 import com.opengldemo.GLesUtils;
 import com.opengldemo.R;
+import com.opengldemo.filter.playcvideo.PlayVideoNormalFilter;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -66,6 +67,8 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
     int surfaceHeight  = -1;//窗口高
     private FloatBuffer floatBuffer = null;
     public static final int BYTES_PER_FLOAT = 4;
+    private PlayVideoNormalFilter mPlayVideoNormalFilter = null;
+
 
     public PreviewAndPlayVideoRender(Context context, Handler handler){
         this.mContext = context;

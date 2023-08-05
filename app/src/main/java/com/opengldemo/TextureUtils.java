@@ -63,7 +63,7 @@ public class TextureUtils {
     public static Bitmap readBitmapFromRes(Context context){
         Bitmap result = null;
         try {
-            result = BitmapFactory.decodeStream(context.getAssets().open("lena.jpg"));
+            result = BitmapFactory.decodeStream(context.getAssets().open("1080test.jpg"));
         } catch (IOException e) {
             Log.i(TAG,"loadPng2Texture : IOException");
             e.printStackTrace();
