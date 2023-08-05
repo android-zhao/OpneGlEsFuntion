@@ -13,6 +13,7 @@ import com.opengldemo.CameraManager;
 import com.opengldemo.GLesUtils;
 import com.opengldemo.TextureRotateUtil;
 import com.opengldemo.bean.Rotation;
+import com.opengldemo.filter.FboCameraFilter;
 import com.opengldemo.filter.FboOnePicFilter;
 
 import java.nio.ByteBuffer;
@@ -26,6 +27,7 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
     private static final  String TAG = "FboRender";
     private Context mContext;
     private FboOnePicFilter mOnePicFilter ;
+    private FboCameraFilter mOneCameraFilter ;
     FboOnePicFilter.OnDataDrawWithFilter listener;
     OnDataDrawByBuffer lis;
     GLSurfaceView mGlSurface = null;
@@ -132,20 +134,12 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
         Log.i("zhf_opengl","onSurfaceCreated");
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-        //创建FBO的Filter
-        mOnePicFilter = new FboOnePicFilter(mContext);
+        //Fbo渲染一张图片
+        initFboOnePicFilter();
 
+        //fbo渲染camera纹理
+//        initFboCameraFilter();
 
-        //创建相机纹理
-        cameraTextureId = GLesUtils.createCameraTexture();
-        if (cameraTextureId != -1) {
-            surfaceTexture = new SurfaceTexture(cameraTextureId);
-            surfaceTexture.setOnFrameAvailableListener(this);
-        }
-
-        initCamera();
-        //调整相机出来的视频 +纹理坐标位置
-        mOnePicFilter.setPreviewSize(mImageWidth, mImageHeight);
         /*****************************************render中实现****************************************/
         //设置背景颜色
 //        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -155,6 +149,26 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
 //        createProgram();
 //        createFboEnv();
         /*****************************************render中实现****************************************/
+    }
+
+    private void initFboCameraFilter(){
+
+        //创建相机纹理
+        cameraTextureId = GLesUtils.createCameraTexture();
+        if (cameraTextureId != -1) {
+            surfaceTexture = new SurfaceTexture(cameraTextureId);
+            surfaceTexture.setOnFrameAvailableListener(this);
+        }
+
+        initCamera();
+        mOneCameraFilter = new FboCameraFilter(mContext);
+        //调整相机出来的视频 +纹理坐标位置
+        mOneCameraFilter.setPreviewSize(mImageWidth, mImageHeight);
+    }
+
+    private void initFboOnePicFilter(){
+        //创建FBO的Filter
+        mOnePicFilter = new FboOnePicFilter(mContext);
     }
 
     @Override
@@ -168,20 +182,34 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
 //        glViewport(0, 0, mBitmapWidth, mBitmapHeight);
 
         glViewport(0, 0, width, height);
-        //指定camera输出纹理对象
-        cameraManager.startPreview(surfaceTexture);
 
+        //fbo渲染图片
+        fboOnePicOnSurfaceChange(width,height);
+
+        //fbo渲染camera数据
+//        fboCameraOnSurfaceChanged(width,height);
+
+    }
+
+    private void fboOnePicOnSurfaceChange( int width, int height){
         mOnePicFilter.setViewParms(width,height);
         mOnePicFilter.setListener(listener);
+    }
 
+
+    private void fboCameraOnSurfaceChanged(int width, int height){
+        //指定camera输出纹理对象
+        cameraManager.startPreview(surfaceTexture);
+        mOneCameraFilter.setViewParams(width,height);
     }
     int count = 0;
     @Override
     public void onDrawFrame(GL10 gl) {
         Log.i("zhf_opengl","onDrawFrame begin");
         //使用FBO绘制
-//        mOnePicFilter.onDrawFrame();
-        mOnePicFilter.onDrawFrameForCamera(cameraTextureId);
+        mOnePicFilter.onDrawFrame();
+
+//        mOneCameraFilter.onDrawFrameForCamera(cameraTextureId);
         /*****************************************render中实现****************************************/
 //        if(count<1){
 //            count++;

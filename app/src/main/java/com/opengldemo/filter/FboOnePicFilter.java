@@ -113,7 +113,7 @@ public class FboOnePicFilter {
             String vertxtStr  = null;
             String framentStr = null;
             vertxtStr = GLesUtils.readTextFileFromResource(mContext, R.raw.fbo_onepic_vertext);
-            framentStr = GLesUtils.readTextFileFromResource(mContext,R.raw.fbo_camera_fragement);
+            framentStr = GLesUtils.readTextFileFromResource(mContext,R.raw.fbo_onepic_frament);
             mRendeId = buildProgram(vertxtStr, framentStr);
 
 //            Log.i(TAG,"updateTextureShader end");
