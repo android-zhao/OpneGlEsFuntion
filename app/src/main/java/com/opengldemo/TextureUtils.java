@@ -63,7 +63,7 @@ public class TextureUtils {
     public static Bitmap readBitmapFromRes(Context context){
         Bitmap result = null;
         try {
-            result = BitmapFactory.decodeStream(context.getAssets().open("4Ktest.jpg"));
+            result = BitmapFactory.decodeStream(context.getAssets().open("lena.jpg"));
         } catch (IOException e) {
             Log.i(TAG,"loadPng2Texture : IOException");
             e.printStackTrace();
@@ -71,5 +71,29 @@ public class TextureUtils {
 
         return result;
     }
+
+    public static Bitmap read4KBitmapFromRes(Context context){
+        Bitmap result = null;
+        try {
+            result = BitmapFactory.decodeStream(context.getAssets().open("4k.png"));
+        } catch (IOException e) {
+            Log.i(TAG,"loadPng2Texture : IOException");
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+    public static Bitmap read1080pBitmapFromRes(Context context){
+        Bitmap result = null;
+        try {
+            result = BitmapFactory.decodeStream(context.getAssets().open("1080test.png"));
+        } catch (IOException e) {
+            Log.i(TAG,"loadPng2Texture : IOException");
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
 
 }

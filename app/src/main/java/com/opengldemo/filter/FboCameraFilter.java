@@ -1,5 +1,6 @@
 package com.opengldemo.filter;
 
+import static android.opengl.GLES20.GL_ARRAY_BUFFER;
 import static android.opengl.GLES20.GL_COMPILE_STATUS;
 import static android.opengl.GLES20.GL_DEPTH_TEST;
 import static android.opengl.GLES20.GL_FRAGMENT_SHADER;
@@ -56,13 +57,17 @@ public class FboCameraFilter {
 
     private FloatBuffer verFloatBuffer = null;
     private FloatBuffer texFloatBuffer = null;
+
+    private FloatBuffer verFboFloatBuffer = null;
+    private FloatBuffer texFboFloatBuffer = null;
+
         //顶点坐标
     private float vertex[] = {
                 -1.0f,  1.0f,
                 -1.0f, -1.0f,
                 1.0f, 1.0f,
                 1.0f,  -1.0f,
-        };
+    };
 
     //纹理坐标
     private float texture[] = {
@@ -72,6 +77,17 @@ public class FboCameraFilter {
                 1.0f, 1.0f,
     };
 
+    //fbo 纹理坐标与正常纹理方向不同，原点位于左下角
+    private float vFboTexCoors[] = {
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+    };
+
+
+
+
 
     public FboCameraFilter(Context mContext) {
         this.mContext = mContext;
@@ -79,10 +95,24 @@ public class FboCameraFilter {
     }
 
    private void onFilterCreate(){
+        initFrontGrandShader();
+        Log.i(TAG,"==============init front shader end ===================");
+        initFboShader();
+    }
+
+    private void initFrontGrandShader(){
         createVertexArray();
         createShader();
+//        createEnv();
+
+    }
+    private void initFboShader(){
+        createFboVertexArray();
+        createFboShader();
         createEnv();
     }
+
+
     //设置的是窗口视图的尺寸
     public void setViewParams(int width, int height){
             mWidth = width;
@@ -109,12 +139,13 @@ public class FboCameraFilter {
     protected static final String U_TEXTURE_TRANSFORM = "vMatrix";
     private int mWidth,mHeight;
     private int mCameraPreviewWidth,mCameraPreviewHeight;
+
     private void createShader() {
 
         String vertxtStr  = null;
         String framentStr = null;
         vertxtStr = GLesUtils.readTextFileFromResource(mContext, R.raw.fbo_onepic_vertext);
-        framentStr = GLesUtils.readTextFileFromResource(mContext,R.raw.fbo_camera_fragement);
+        framentStr = GLesUtils.readTextFileFromResource(mContext,R.raw.fbo_onepic_frament);
         mRendeId = buildProgram(vertxtStr, framentStr);
         // 纹理采样器 id uTextureUnitLocation
         uTextureUnitLocation =  glGetUniformLocation(mRendeId, U_TEXTURE_OES_UNIT);
@@ -138,29 +169,66 @@ public class FboCameraFilter {
 
     }
 
-        public void onDrawFrameForCamera(int cameraTextureId){
+    private int mFboRendeId = -1;
+    private int uFboTextureUnitLocation = -1;
+    private int uFboTextureTransformLocation = -1;
+    private int aFboPositionLocation = -1;
+    private int aFboTextureCoordinatesLocation = -1;
 
-            glViewport(0, 0, mWidth, mHeight);
-            GLES20.glEnable(GL_DEPTH_TEST);
-            Log.i(TAG,"fbo filter onDrawFrameForCamera ");
-            glBindFramebuffer(GL_FRAMEBUFFER,fboBuffer[0]);
+    private void  createFboShader(){
+        String vertxtStr  = null;
+        String framentStr = null;
+        vertxtStr = GLesUtils.readTextFileFromResource(mContext, R.raw.fbo_onepic_vertext);
+        framentStr = GLesUtils.readTextFileFromResource(mContext,R.raw.fbo_camera_fragement);
+        mFboRendeId = buildProgram(vertxtStr, framentStr);
 
-            //将纹理缓冲附加到帧缓冲上 但是帧纹理缓冲有2个 确认下分别哪一个附加那哪一个上
-            glFramebufferTexture2D(GL_FRAMEBUFFER,GLES20.GL_COLOR_ATTACHMENT0,
+        // fbo 纹理采样器 id uTextureUnitLocation
+        uFboTextureUnitLocation =  glGetUniformLocation(mFboRendeId, U_TEXTURE_OES_UNIT);
+        //视图的变化矩阵 操作顶点
+        uFboTextureTransformLocation = glGetUniformLocation(mFboRendeId, U_TEXTURE_TRANSFORM);
+        //顶点坐标 顶点0 1 2 3
+        aFboPositionLocation = glGetAttribLocation(mFboRendeId, A_POSITION);
+        //纹理坐标 在cube 数组中声明的
+        aFboTextureCoordinatesLocation = glGetAttribLocation(mFboRendeId, A_TEXTURE_COORDINATES);
+
+        Log.i(TAG,"updateFBOTextureAndVertxy floatBuffer size :" + verFboFloatBuffer.capacity());
+        Log.i(TAG,"updateFBOTextureAndVertxy texFloatBuffer size :" + texFboFloatBuffer.capacity());
+
+        Log.i(TAG,"updateFBOTextureAndVertxy mRendeId  :" + mFboRendeId);
+        Log.i(TAG,"updateFBOTextureAndVertxy frament 采样器 句柄  :" + uFboTextureUnitLocation);
+        Log.i(TAG,"updateFBOTextureAndVertxy vertex 顶点句柄  :" + aFboPositionLocation);
+
+        Log.i(TAG,"updateFBOTextureAndVertxy vertex 变化矩阵  :" + uFboTextureTransformLocation);
+        Log.i(TAG,"updateFBOTextureAndVertxy vertex 纹理坐标 句柄  :" + aFboTextureCoordinatesLocation);
+        Log.i(TAG,"updateFBOTextureAndVertxy end");
+
+    }
+
+   public void onDrawFrameForCamera(int cameraTextureId){
+
+       glViewport(0, 0, mWidth, mHeight);
+       GLES20.glEnable(GL_DEPTH_TEST);
+       Log.i(TAG,"fbo filter onDrawFrameForCamera ");
+       glBindFramebuffer(GL_FRAMEBUFFER,fboBuffer[0]);
+
+       //将纹理缓冲附加到帧缓冲上 但是帧纹理缓冲有2个 确认下分别哪一个附加那哪一个上
+       glFramebufferTexture2D(GL_FRAMEBUFFER,GLES20.GL_COLOR_ATTACHMENT0,
                     GLES20.GL_TEXTURE_2D,fboTextureBuffer[1],0);
 
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER,GLES20.GL_DEPTH_ATTACHMENT,
+       glFramebufferRenderbuffer(GL_FRAMEBUFFER,GLES20.GL_DEPTH_ATTACHMENT,
                     GLES20.GL_RENDERBUFFER, fboRenderBuffer[0]);
 
-            // 检查 FBO 的完整性状态
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER)!= GL_FRAMEBUFFER_COMPLETE) {
+       // 检查 FBO 的完整性状态
+       if (glCheckFramebufferStatus(GL_FRAMEBUFFER)!= GL_FRAMEBUFFER_COMPLETE) {
                 Log.i(TAG,"FBOSample::CreateFrameBufferObj glCheckFramebufferStatus status != GL_FRAMEBUFFER_COMPLETE");
-            }
-            onClear();
-            onUseProgram();
-            onSetExpandData();
-            onBindTexture(cameraTextureId);
-            onDraw();
+       }
+
+       onClear();
+       onUseProgram();
+       onSetExpandData();
+       onBindTexture(cameraTextureId);
+       onDraw();
+
 
 //            long begin = System.currentTimeMillis();
 //
@@ -172,19 +240,21 @@ public class FboCameraFilter {
 //                onDataDrawInterface.onData(mBuffer);
 //            }
 
-            /***********************************************************/
-            deleteEnvi();
-//            mBitmap.recycle();
 
-        }
+       /***********************************************************/
+       deleteEnvi();
+//     mBitmap.recycle();
+
+  }
 
         private void onClear(){
             GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         }
-        protected void onUseProgram(){
+
+   protected void onUseProgram(){
             GLES20.glUseProgram(mRendeId);
-        }
+   }
 
         /**
          * 设置MVP矩阵
@@ -277,6 +347,16 @@ public class FboCameraFilter {
             mBuffer = ByteBuffer.allocate(mBitmap.getWidth() * mBitmap.getHeight() * 4);
         }
 
+
+        //创建FBO的环境，将相加输出的纹理挂载到FBO上
+        private void createFboEnv(){
+            int mFrontVaoID[] = new int[1];
+            GLES20.glGenBuffers(1,mFrontVaoID,0);
+            GLES20.glBindBuffer(GL_ARRAY_BUFFER,mFrontVaoID[0]);
+        }
+
+
+
         private void deleteEnvi() {
             GLES20.glDeleteTextures(2, fboTextureBuffer, 0);
             GLES20.glDeleteRenderbuffers(1, fboRenderBuffer, 0);
@@ -366,6 +446,7 @@ public class FboCameraFilter {
 
 
         public static final int BYTES_PER_FLOAT = 4;
+
         private void createVertexArray() {
             verFloatBuffer = ByteBuffer
                     .allocateDirect(vertex.length * BYTES_PER_FLOAT)
@@ -381,6 +462,24 @@ public class FboCameraFilter {
             texFloatBuffer.position(0);
 
         }
+
+        private void createFboVertexArray(){
+            verFboFloatBuffer = ByteBuffer
+                    .allocateDirect(vertex.length * BYTES_PER_FLOAT)
+                    .order(ByteOrder.nativeOrder())
+                    .asFloatBuffer()
+                    .put(vertex);
+            verFboFloatBuffer.position(0);
+
+            texFloatBuffer= ByteBuffer
+                    .allocateDirect(vFboTexCoors.length * BYTES_PER_FLOAT)
+                    .order(ByteOrder.nativeOrder())
+                    .asFloatBuffer()
+                    .put(texture);
+            texFloatBuffer.position(0);
+        }
+
+
         public  boolean validateProgram(int programObjectId) {
             glValidateProgram(programObjectId);
 

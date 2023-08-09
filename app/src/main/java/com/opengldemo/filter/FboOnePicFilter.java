@@ -80,18 +80,16 @@ public class FboOnePicFilter {
     }
 
     private void onFilterCreate(){
-        mBitmap = TextureUtils.readBitmapFromRes(mContext);
+//        mBitmap = TextureUtils.readBitmapFromRes(mContext);
+//        mBitmap = TextureUtils.read4KBitmapFromRes(mContext);
+        mBitmap = TextureUtils.read1080pBitmapFromRes(mContext);
         createVertexArray();
         createShader();
         createEnv();
     }
-    public void setViewParms(int width, int height){
+    public void setFilterParms(int width,int height){
         mWidth = width;
         mHeight = height;
-    }
-    public void setPreviewSize(int previewWidth,int previewHeight){
-        mCameraPreviewWidth = previewWidth;
-        mCameraPreviewHeight = previewHeight;
     }
     private int mRendeId = -1;
 
@@ -107,7 +105,6 @@ public class FboOnePicFilter {
     protected static final String U_TEXTURE_OES_UNIT = "vTexture";
     protected static final String U_TEXTURE_TRANSFORM = "vMatrix";
     private int mWidth,mHeight;
-    private int mCameraPreviewWidth,mCameraPreviewHeight;
     private void createShader() {
 
             String vertxtStr  = null;
@@ -145,7 +142,6 @@ public class FboOnePicFilter {
         onDataDrawInterface = listener;
     }
     public void onDrawFrame(){
-
         glViewport(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
         GLES20.glEnable(GL_DEPTH_TEST);
         if(mBitmap != null && !mBitmap.isRecycled()){
@@ -168,65 +164,21 @@ public class FboOnePicFilter {
             onSetExpandData();
             onBindTexture(fboTextureBuffer[0]);
             onDraw();
-            long begin = System.currentTimeMillis();
-
+            long beginGetPix = System.currentTimeMillis();
             GLES20.glReadPixels(0, 0, mBitmap.getWidth(), mBitmap.getHeight(), GLES20.GL_RGBA,
                     GLES20.GL_UNSIGNED_BYTE, mBuffer);
-            long end = System.currentTimeMillis();
+            long endGetPixs = System.currentTimeMillis();
+            Log.i(TAG,"ZHF -->" + (endGetPixs - beginGetPix));
 
-            Log.i(TAG,"fbo glReadPixels cost -->" +(end -begin));
             if(onDataDrawInterface != null){
                 onDataDrawInterface.onData(mBuffer);
             }
-
 
             /***********************************************************/
             deleteEnvi();
             mBitmap.recycle();
         }
     }
-
-
-    public void onDrawFrameForCamera(int cameraTextureId){
-
-        glViewport(0, 0, mWidth, mHeight);
-        GLES20.glEnable(GL_DEPTH_TEST);
-        Log.i(TAG,"fbo filter onDrawFrameForCamera ");
-            glBindFramebuffer(GL_FRAMEBUFFER,fboBuffer[0]);
-
-            //将纹理缓冲附加到帧缓冲上 但是帧纹理缓冲有2个 确认下分别哪一个附加那哪一个上
-            glFramebufferTexture2D(GL_FRAMEBUFFER,GLES20.GL_COLOR_ATTACHMENT0,
-                    GLES20.GL_TEXTURE_2D,fboTextureBuffer[1],0);
-
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER,GLES20.GL_DEPTH_ATTACHMENT,
-                    GLES20.GL_RENDERBUFFER, fboRenderBuffer[0]);
-
-            // 检查 FBO 的完整性状态
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER)!= GL_FRAMEBUFFER_COMPLETE) {
-                Log.i(TAG,"FBOSample::CreateFrameBufferObj glCheckFramebufferStatus status != GL_FRAMEBUFFER_COMPLETE");
-            }
-            onClear();
-            onUseProgram();
-            onSetExpandData();
-            onBindTexture(cameraTextureId);
-            onDraw();
-
-//            long begin = System.currentTimeMillis();
-//
-//            GLES20.glReadPixels(0, 0, mBitmap.getWidth(), mBitmap.getHeight(), GLES20.GL_RGBA,
-//                    GLES20.GL_UNSIGNED_BYTE, mBuffer);
-//            long end = System.currentTimeMillis();
-//            Log.i(TAG,"fbo glReadPixels cost -->" +(end -begin));
-//            if(onDataDrawInterface != null){
-//                onDataDrawInterface.onData(mBuffer);
-//            }
-
-            /***********************************************************/
-            deleteEnvi();
-//            mBitmap.recycle();
-
-    }
-
     private void onClear(){
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);

@@ -41,18 +41,25 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.util.Size;
+import android.view.Surface;
 
 import com.opengldemo.GLesUtils;
 import com.opengldemo.R;
-import com.opengldemo.filter.playcvideo.PlayVideoNormalFilter;
+import com.opengldemo.codec.CodecParams;
+import com.opengldemo.codec.MediaCodecManager;
+import com.opengldemo.filter.playcvideo.PlayVideoWitMtxFilter;
+import com.opengldemo.view.MediaUtils;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -67,14 +74,31 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
     int surfaceHeight  = -1;//窗口高
     private FloatBuffer floatBuffer = null;
     public static final int BYTES_PER_FLOAT = 4;
-    private PlayVideoNormalFilter mPlayVideoNormalFilter = null;
 
+    private  PlayVideoWitMtxFilter playVideoMtxFilter = null;
 
     public PreviewAndPlayVideoRender(Context context, Handler handler){
         this.mContext = context;
         this.mHandler = handler;
         createVertexArray();
+
+        initMediaPlayer();
         Log.i(TAG,"PreviewAndPlayVideoRender END");
+    }
+    MediaCodecManager manager;
+    String mVideoPath = "";
+    private void initMediaPlayer(){
+        mVideoPath = "/data/data/com.opengldemo/cache/360_480_01_55.mp4";
+
+        manager = MediaCodecManager.getInstance(mContext);
+
+        CodecParams codecParams = new CodecParams();
+        codecParams.setVideoPath(mVideoPath);
+
+        //1：设置解码参数
+        manager.setMediaParams(codecParams);
+        Log.i(TAG,"initMediaPlayer end");
+
     }
 
 
@@ -88,10 +112,22 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
         createCameraTexture();
         Log.i(TAG,"mCameraTextureId :" +mCameraTextureId);
 
-        createCodecTexture();
+//        createCodecTexture();
+        useSameSurfaceTexture();
         Log.i(TAG,"mCodecTextureId:" + mCodecTextureId);
 
+        playVideoMtxFilter = new PlayVideoWitMtxFilter(mContext);
+        playVideoMtxFilter.init();
+
+        //2：设置预览的surface
+        manager.setPreviewSurface(mPlayVideoSurface);
+        //3：启动播放
+        manager.startPlay();
+
+
         updateTextureAndVertxy();
+//        playVideoMtxFilter = new PlayVideoWitMtxFilter(mContext);
+//        playVideoMtxFilter.init();
         Log.i(TAG,"update shader end  ");
     }
 
@@ -102,22 +138,42 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
         surfaceWidth = width;
         surfaceHeight = height;
 //        mPreviewSize = new Size(width,height);
-        createCameraTexture();
+//        createCameraTexture();
+
+//
+//        //2：设置预览的surface
+//        manager.setPreviewSurface(mPlayVideoSurface);
+//        //3：启动播放
+//        manager.startPlay();
+
         Message message = Message.obtain();
         message.what =OPEN_CAMERA;
         mHandler.sendMessage(message);
+//        initFilterMtx();
+        playVideoMtxFilter.onSurfaceChanged(width,height);
+    }
 
-
+    private void  initFilterMtx(){
+        updateModuleMatrix();
+        updateProjection();
+        updateCameraMtx();
     }
     private boolean isUpdateVertex = false;
+
     @Override
     public void onDrawFrame(GL10 gl) {
-        Log.i(TAG,"onDrawFrame");
+//        Log.i(TAG,"onDrawFrame");
         if(isUpdateVertex){
             updateTextureAndVertxy();
             isUpdateVertex = false;
         }
+//
         drawTexture();
+//        updateTextureButNoDraw();
+        if(updateVideoTexture){
+            drawVideoTexture();
+            updateVideoTexture = false;
+        }
     }
 
     private void createTexture(){
@@ -146,7 +202,10 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
             (POSITION_COMPONENT_COUNT + TEXTURE_COMPONENT_COUNT)
                     * BYTES_PER_FLOAT;
     private SurfaceTexture cameraSurfaceTexture = null;
+    private SurfaceTexture mPlayVideoTexture = null;
+    private Surface mPlayVideoSurface = null;
     float[] mtx = new float[16];
+    private int cameraFrameCount = 0;
     private void drawTexture(){
         glClear(GL_COLOR_BUFFER_BIT);
         if(cameraSurfaceTexture == null){
@@ -188,7 +247,16 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }
 
+    private void updateTextureButNoDraw(){
+        glClear(GL_COLOR_BUFFER_BIT);
+        if(cameraSurfaceTexture == null){
+            Log.i(TAG," CAMERA IS NOT READY ");
+            return;
+        }
 
+        cameraSurfaceTexture.updateTexImage();
+        cameraSurfaceTexture.getTransformMatrix(mtx);
+    }
 
 
     void createVertexArray(){
@@ -226,9 +294,140 @@ public class PreviewAndPlayVideoRender implements GLSurfaceView.Renderer {
         return mCameraTextureId;
     }
 
-    //创建codec的纹理
+    float[] mPlayVideoMtx = new float[16];//纹理的变换矩阵
+    private final float[] projectionMatrix = new float[16];//顶点的变换矩阵
+
+    private volatile  boolean updateVideoTexture = false;
+
+    private int codecCount = 0;
+    //创建codec的纹理和设置回调
     private void createCodecTexture(){
+
         mCodecTextureId = GLesUtils.createCameraTexture();
+
+        mPlayVideoTexture = new SurfaceTexture(mCodecTextureId);
+        mPlayVideoTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            @Override
+            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                codecCount++;
+                if(codecCount % 30 == 0 ){
+                    Log.i(TAG,"codec onFrameAvailable " +codecCount);
+                }
+                updateVideoTexture = true;
+            }
+        });
+        mPlayVideoSurface = new Surface(mPlayVideoTexture);
+        Log.i(TAG,"createCodecTexture end");
+    }
+
+    private void useSameSurfaceTexture(){
+        mPlayVideoTexture = new SurfaceTexture(mCameraTextureId);
+        mPlayVideoTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            @Override
+            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                codecCount++;
+                if(codecCount % 30 == 0 ){
+                    Log.i(TAG,"ues same texture codec onFrameAvailable " +codecCount);
+                }
+                updateVideoTexture = true;
+            }
+        });
+        mPlayVideoSurface = new Surface(mPlayVideoTexture);
+        Log.i(TAG,"createCodecTexture end");
+    }
+    //1: 绘制几帧之后不在绘制了  概率
+    //2：纹理的设置周围边上的那个参数
+    //3：那几个矩阵值不对
+
+    private void drawVideoTexture(){
+        mPlayVideoTexture.updateTexImage();
+        mPlayVideoTexture.getTransformMatrix(mPlayVideoMtx);
+        playVideoMtxFilter.setTextureTransformMatrix(mPlayVideoMtx);
+
+//        playVideoMtxFilter.setCameraMtx(viewMtx);//v矩阵
+
+//        playVideoMtxFilter.setModuleMatrix(tranlateMtx);//m矩阵
+
+//        playVideoMtxFilter.setProjectionMatrix(projectionMatrix);
+//
+//        playVideoMtxFilter.onDrawFrame(mCodecTextureId,
+//            playVideoMtxFilter.getmVertexBuffer(),playVideoMtxFilter.getmTextureBuffer());
+
+
+        playVideoMtxFilter.onDrawFrame(mCameraTextureId,
+                playVideoMtxFilter.getmVertexBuffer(),playVideoMtxFilter.getmTextureBuffer());
+
+    }
+
+    private void updateProjection() {
+        float viewRatio = (float) surfaceWidth / surfaceHeight;
+
+        float videoRatio = (float) MediaUtils.getVideoWidth(mVideoPath) / MediaUtils.getVideoHeight(mVideoPath);
+
+
+        //正交投影矩阵
+        Matrix.orthoM(projectionMatrix, 0,
+                - 1, 1, -1, 1,
+                -1f, 1f);
+
+        playVideoMtxFilter.setProjectionMatrix(projectionMatrix);
+        Log.i(TAG,"updateProjection :" +Arrays.toString(projectionMatrix));
+
+    }
+
+
+    private void updateModuleMatrix(){
+        updateTranslateMtx();
+        updateScaleMtx();
+//        Matrix.multiplyMM(moduleMtx,0,tranlateMtx,0,scaleMtx,0);
+
+//        playVideoMtxFilter.setModuleMatrix(moduleMtx);
+
+        Log.i(TAG,"updateModuleMatrix :" +Arrays.toString(moduleMtx));
+    }
+
+
+    private float[] tranlateMtx = new float[16];
+    private float[] scaleMtx  = new float[16];
+    private float[] moduleMtx = new float[16];
+    //相机矩阵
+    private float[] viewMtx =  new float[16];
+
+
+
+    //todo 问题 ：平移矩阵的平移范围
+
+    private void updateTranslateMtx(){
+        float viewRatio = (float) surfaceWidth / surfaceHeight;
+        Matrix.setIdentityM(tranlateMtx,0);
+        Matrix.translateM(tranlateMtx,0,0.3f,0.5f,0.0f);
+        Log.i(TAG,"updateTranslateMtx :" + Arrays.toString(tranlateMtx));
+    }
+
+    private void updateScaleMtx(){
+        float viewRatio = (float) surfaceWidth / surfaceHeight;
+        Matrix.setIdentityM(scaleMtx,0);
+        Matrix.scaleM(scaleMtx,0,0.5f,0.5f,1.0f);
+        Log.i(TAG,"updateScaleMtx:" +Arrays.toString(scaleMtx));
+    }
+
+    private void updateCameraMtx(){
+        Log.i(TAG,"updateCameraMtx beging:" +Arrays.toString(viewMtx));
+        Matrix.setLookAtM(
+                viewMtx, 0,
+                0f, 0f, 5.0f,
+                0f, 0f, 0f,
+                0f, 1.0f, 0f
+        );
+        playVideoMtxFilter.setCameraMtx(viewMtx);
+        Log.i(TAG,"updateCameraMtx end:" +Arrays.toString(viewMtx));
+    }
+
+
+
+
+    // 绘制视频中的 texture
+    private void drawVideo(int textureId){
 
     }
 

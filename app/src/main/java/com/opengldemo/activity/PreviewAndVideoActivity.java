@@ -121,6 +121,7 @@ public class PreviewAndVideoActivity extends Activity {
     }
 
     private CameraCaptureSession mCurrentSession ;
+    private int cameraFrame = 0;
     private void startPreview()  {
 //        int cameraTextureId = mRender.getCameraTextureId();
         SurfaceTexture surfaceTexture = mRender.getTexture();
@@ -128,7 +129,10 @@ public class PreviewAndVideoActivity extends Activity {
         surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
             @Override
             public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                Log.i(TAG,"onFrameAvailable");
+                cameraFrame ++;
+                if(cameraFrame %100 == 0){
+                    Log.i(TAG,"camera onFrameAvailable");
+                }
                 mGlPreview.requestRender();
             }
         });

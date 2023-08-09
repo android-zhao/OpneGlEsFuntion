@@ -2,7 +2,6 @@ package com.opengldemo.render;
 
 import static android.opengl.GLES20.glBindTexture;
 import static android.opengl.GLES20.glGenTextures;
-import static android.opengl.GLES20.glUniformMatrix4fv;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
@@ -13,16 +12,11 @@ import android.opengl.Matrix;
 import android.util.Log;
 import android.view.Surface;
 
-import com.opengldemo.TextureRotateUtil;
 import com.opengldemo.codec.CodecParams;
 import com.opengldemo.codec.MediaCodecManager;
 import com.opengldemo.filter.playcvideo.PlayVideoNormalFilter;
 import com.opengldemo.view.MediaUtils;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -38,7 +32,7 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 //   private FloatBuffer mVertexBuffer = null;
 //   private FloatBuffer mTextureBuffer = null;
    private int previewTextureId = -1;
-   private  SurfaceTexture mSurfaceTexture = null;
+   private  SurfaceTexture mSurfaceTexture = null;//预览纹理
    private PlayVideoNormalFilter mPlayVideoNormalFilter = null;
 
    public PlayVideoByOpenglRender(Context context) {
@@ -48,7 +42,7 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 
    private boolean loadVideo() {
 //      String videoPath = "/data/data/com.opengldemo/cache/59733_720p.mp4";
-      String videoPath = "/data/data/com.opengldemo/cache/test.mp4";
+      String videoPath = "/data/data/com.opengldemo/cache/360_480_01_55.mp4";
       // todo 检查视频的可用性等
       mVideoPath = videoPath;
       return true;
@@ -73,7 +67,6 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 
       //3：准备MediaPlayer环境播放视频
       initMediaPlayer();
-
    }
 
    private int viewWidth = -1; //窗口的宽
@@ -93,7 +86,6 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 
    private float[] sTMatrix = new float[16];
    private final float[] projectionMatrix = new float[16];
-   private final float[] textureScaleMatrix = new float[16];
    private void updateProjection() {
       float viewRatio = (float) viewWidth / viewHeight;
 
@@ -106,10 +98,7 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
 //              0, 1, 0, 1,
 //              0f, 1f);
       mPlayVideoNormalFilter.setProjectionMatrix(projectionMatrix);
-//      Matrix.scaleM(textureScaleMatrix,0,0.5f,1,0);
    }
-
-
 
    private volatile boolean isUpdateTexture = false;
    @Override
@@ -121,18 +110,19 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
             mSurfaceTexture.updateTexImage();
             mSurfaceTexture.getTransformMatrix(sTMatrix);
             mPlayVideoNormalFilter.setTextureTransformMatrix(sTMatrix);
-            mPlayVideoNormalFilter.setTextureScaleMatrix(textureScaleMatrix);
             isUpdateTexture = false;
          }
 
          mPlayVideoNormalFilter.onDrawFrame(previewTextureId,mPlayVideoNormalFilter.getmVertexBuffer(),
                  mPlayVideoNormalFilter.getmTextureBuffer());
+
+
       }
    }
 
    @Override
    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-      Log.i(TAG,"onFrameAvailable "+ Thread.currentThread().getName() );
+//      Log.i(TAG,"onFrameAvailable-->"+ Thread.currentThread().getName() );
       isUpdateTexture = true;
    }
 
@@ -152,7 +142,6 @@ public class PlayVideoByOpenglRender implements GLSurfaceView.Renderer, SurfaceT
       manager.setPreviewSurface(mPreviewSurface);
       //3：启动播放
       manager.startPlay();
-
       Log.i(TAG,"initMediaPlayer end");
 
    }

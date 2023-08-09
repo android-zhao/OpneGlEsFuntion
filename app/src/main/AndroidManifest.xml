@@ -30,11 +30,6 @@
             android:name=".activity.ShaderToyActivity"
             android:exported="false" />
         <activity
-            android:name=".GlTransitionActivity"
-            android:exported="false"
-            android:label="@string/title_activity_gl_transition"
-            android:theme="@style/Theme.OpenGlDemo.NoActionBar" />
-        <activity
             android:name=".activity.OpenGlTransitionActivity"
             android:exported="false" />
         <activity
@@ -44,15 +39,23 @@
             android:name=".activity.RecordActivity"
             android:exported="false" />
         <activity
-            android:name=".AnimationActivity"
+            android:name=".activity.AnimationActivity"
             android:exported="false" />
-        <activity android:name=".activity.CameraViewMatrixActivity" />
-        <activity android:name=".activity.FboActivity" />
-        <activity android:name=".activity.WaterMarkActivity" />
-        <activity android:name=".activity.MVPTestActivity" />
-        <activity android:name=".activity.CameraTestActivity" />
-        <activity android:name=".activity.GlsurfaceActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".activity.CameraViewMatrixActivity"
+            android:exported="false" />
+        <activity android:name=".activity.FboActivity"
+            android:exported="false" />
+
+        <activity android:name=".activity.WaterMarkActivity"
+            android:exported="false" />
+        <activity android:name=".activity.MVPTestActivity"
+            android:exported="false" />
+        <activity android:name=".activity.CameraTestActivity"
+            android:exported="false" />
+        <activity android:name=".activity.GlsurfaceActivity"
+            android:exported="false" />
+        <activity android:name=".MainActivity"
+            android:exported="false" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

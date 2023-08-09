@@ -1,36 +1,37 @@
 package com.opengldemo.render;
 import static android.opengl.GLES20.glClearColor;
+import static android.opengl.GLES20.glDisable;
+import static android.opengl.GLES20.glEnable;
+import static android.opengl.GLES20.glGetAttribLocation;
+import static android.opengl.GLES20.glGetUniformLocation;
 import static android.opengl.GLES20.glViewport;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
+import android.graphics.BitmapFactory;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.util.Log;
 
-import com.opengldemo.CameraManager;
 import com.opengldemo.GLesUtils;
-import com.opengldemo.TextureRotateUtil;
-import com.opengldemo.bean.Rotation;
-import com.opengldemo.filter.FboCameraFilter;
+import com.opengldemo.R;
 import com.opengldemo.filter.FboOnePicFilter;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrameAvailableListener {
+public class FboRender implements GLSurfaceView.Renderer {
 
     private static final  String TAG = "FboRender";
     private Context mContext;
     private FboOnePicFilter mOnePicFilter ;
-    private FboCameraFilter mOneCameraFilter ;
     FboOnePicFilter.OnDataDrawWithFilter listener;
     OnDataDrawByBuffer lis;
-    GLSurfaceView mGlSurface = null;
 
     /*****************************************render中实现****************************************/
 //    private float mVertex[] = {
@@ -59,12 +60,6 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
         this.listener = listener;
     }
 
-    public FboRender(Context mContext,GLSurfaceView glSurfaceView) {
-        this.mContext = mContext;
-        this.mGlSurface = glSurfaceView;
-    }
-
-
     public FboRender(Context mContext,OnDataDrawByBuffer listener) {
         this.mContext = mContext;
         lis = listener;
@@ -88,57 +83,13 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
 //    }
 
     /*****************************************render中实现****************************************/
-    //相机开启成功之后 拿到的预览数据大小，由相机给出
-    private int mImageWidth = -1;
-    private int mImageHeight = -1;
-    CameraManager cameraManager;
-    private void initCamera() {
-        cameraManager = new CameraManager();
 
-        if (cameraManager.getCamera() == null)
-            cameraManager.openCamera();
-        Camera.Size size = cameraManager.getPreviewSize();
-        // rotation=90 or rotation=270, we need to exchange width and height
-        if (cameraManager.getOrientation() == 90 || cameraManager.getOrientation() == 270) {
-            mImageWidth = size.height;
-            mImageHeight = size.width;
-        } else {
-            mImageWidth = size.width;
-            mImageHeight = size.height;
-        }
-        //        initCamera mImageWidth -->720,mImageHeight-->1280
-        Log.d(TAG,"initCamera mImageWidth -->" +mImageWidth
-                + ",mImageHeight-->" +mImageHeight);
-        Log.i(TAG,"initCamera END");
-
-        adjustSize(cameraManager.getOrientation(), cameraManager.isFront(), true);
-    }
-
-    private FloatBuffer mVertexBuffer = null;
-    private FloatBuffer mTextureBuffer = null;
-    public void adjustSize(int rotation, boolean horizontalFlip, boolean verticalFlip) {
-        float[] vertexData = TextureRotateUtil.VERTEX;
-        float[] textureData = TextureRotateUtil.getRotateTexture(Rotation.fromInt(rotation),
-                horizontalFlip, verticalFlip);
-
-        mVertexBuffer.clear();
-        mVertexBuffer.put(vertexData).position(0);
-        mTextureBuffer.clear();
-        mTextureBuffer.put(textureData).position(0);
-
-    }
-    private int cameraTextureId = -1;
-    SurfaceTexture surfaceTexture = null;
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Log.i("zhf_opengl","onSurfaceCreated");
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        mOnePicFilter = new FboOnePicFilter(mContext);
 
-        //Fbo渲染一张图片
-        initFboOnePicFilter();
-
-        //fbo渲染camera纹理
-//        initFboCameraFilter();
 
         /*****************************************render中实现****************************************/
         //设置背景颜色
@@ -151,56 +102,15 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
         /*****************************************render中实现****************************************/
     }
 
-    private void initFboCameraFilter(){
-
-        //创建相机纹理
-        cameraTextureId = GLesUtils.createCameraTexture();
-        if (cameraTextureId != -1) {
-            surfaceTexture = new SurfaceTexture(cameraTextureId);
-            surfaceTexture.setOnFrameAvailableListener(this);
-        }
-
-        initCamera();
-        mOneCameraFilter = new FboCameraFilter(mContext);
-        //调整相机出来的视频 +纹理坐标位置
-        mOneCameraFilter.setPreviewSize(mImageWidth, mImageHeight);
-    }
-
-    private void initFboOnePicFilter(){
-        //创建FBO的Filter
-        mOnePicFilter = new FboOnePicFilter(mContext);
-    }
-
-    @Override
-    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        mGlSurface.requestRender();
-    }
-
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         Log.i("zhf_opengl","onSurfaceChanged");
 //        glViewport(0, 0, mBitmapWidth, mBitmapHeight);
 
         glViewport(0, 0, width, height);
-
-        //fbo渲染图片
-        fboOnePicOnSurfaceChange(width,height);
-
-        //fbo渲染camera数据
-//        fboCameraOnSurfaceChanged(width,height);
-
-    }
-
-    private void fboOnePicOnSurfaceChange( int width, int height){
-        mOnePicFilter.setViewParms(width,height);
+        mOnePicFilter.setFilterParms(width,height);
         mOnePicFilter.setListener(listener);
-    }
 
-
-    private void fboCameraOnSurfaceChanged(int width, int height){
-        //指定camera输出纹理对象
-        cameraManager.startPreview(surfaceTexture);
-        mOneCameraFilter.setViewParams(width,height);
     }
     int count = 0;
     @Override
@@ -209,7 +119,6 @@ public class FboRender implements GLSurfaceView.Renderer ,SurfaceTexture.OnFrame
         //使用FBO绘制
         mOnePicFilter.onDrawFrame();
 
-//        mOneCameraFilter.onDrawFrameForCamera(cameraTextureId);
         /*****************************************render中实现****************************************/
 //        if(count<1){
 //            count++;
